@@ -2,7 +2,6 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from './middlewares/rateLimit.middleware.js';
-import errorMiddleware from "./middlewares/error.middleware.js";
 import authRoutes from './routes/index.js';
 import protectedRoutes from './routes/protected.routes.js';
 
@@ -12,7 +11,7 @@ app.use(express.json({ limit: "10kb" }));
 app.use(helmet());
 app.use(cors());
 app.use(rateLimit);
-app.use(errorMiddleware);
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api', protectedRoutes);

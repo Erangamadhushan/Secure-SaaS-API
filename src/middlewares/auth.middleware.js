@@ -9,7 +9,7 @@ export const protect = asyncHandler(async (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-        return AppError("Not authorized, token missing", 401);
+        return next(new AppError("Not authorized, token missing", 401));
     }
 
     try {
@@ -29,19 +29,19 @@ export const login = asyncHandler(async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return AppError("Email and password are required", 400);
+            return next(new AppError("Email and password are required", 400));
         }
 
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
-            return AppError("Invalid credentials", 401);
+            return next(new AppError("Invalid credentials", 401));
         }
 
         const isValidPassword = await comparePassword(password, user.password);
 
         if (!isValidPassword) {
-            return AppError("Invalid credentials", 401);
+            return next(new AppError("Invalid credentials", 401));
         }
 
         const token = await generateAccessToken({ id: user._id, role: user.role });
@@ -55,7 +55,7 @@ export const login = asyncHandler(async (req, res) => {
         });
     }
     catch (error) {
-        return AppError("Server error", 500);
+        return next(new AppError("Server error", 500));
             
     }
 });
@@ -65,7 +65,7 @@ export const register = asyncHandler(async (req,res) => {
         const { email, password, role } = req.body;
 
         if (!email || !password || !role) {
-            return AppError("Email, password and role are required", 400);
+            return next(new AppError("Email, password and role are required", 400));
         }
 
         const hashedPassword = await hashPassword(password);
@@ -81,6 +81,6 @@ export const register = asyncHandler(async (req,res) => {
             data: user
         })
     } catch (error) {
-        return AppError("Server error", 500);
+        return next(new AppError("Server error", 500));
     }
 });

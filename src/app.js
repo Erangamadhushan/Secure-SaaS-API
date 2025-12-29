@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from './middlewares/rateLimit.middleware.js';
-import authRoutes from './routes/index.js';
+import authRoutes from './routes/auth.routes.js';
 import protectedRoutes from './routes/protected.routes.js';
 
 const app = express();

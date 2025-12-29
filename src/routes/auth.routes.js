@@ -5,6 +5,9 @@ import rateLimiter from '../middlewares/rateLimit.middleware.js';
 import { protect, login, register } from '../middlewares/auth.middleware.js';
 import { restrictTo } from '../middlewares/role.middleware.js';
 
+import { registerValidation, loginValidation } from '../validations/auth.validation.js';
+import validate from '../middlewares/validate.middleware.js';
+
 const router = express.Router();
 
 router.get('/', (req, res) => {
@@ -21,7 +24,7 @@ router.get("/admin", protect, restrictTo("ADMIN"), (req, res) => {
     })
 });
 
-router.post("/login", login);
-router.post("/register", register);
+router.post("/login", loginValidation, validate, login);
+router.post("/register",registerValidation, validate, register);
 
 export default router;

@@ -1,15 +1,15 @@
 import jwt from 'jsonwebtoken';
 import { hashPassword, comparePassword } from '../../services/auth.service.js';
 import { generateAccessToken } from '../utils/token.js';
-import User from '../models/user/user.model.js'
+import User from '../models/user/user.model.js';
+import AppError from "../utils/AppError.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
 
-export const protect = async (req, res, next) => {
+export const protect = asyncHandler(async (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-        return res.status(401).json({
-            message: 'Not authorized, token missing'
-        });
+        return AppError("Not authorized, token missing", 401);
     }
 
     try {
@@ -22,38 +22,26 @@ export const protect = async (req, res, next) => {
             message: 'Not authorized, token invalid'
         })
     }
-}
+});
 
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Email and password are required",
-                data: null
-            });
+            return AppError("Email and password are required", 400);
         }
 
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid credentials",
-                data: null
-            })
+            return AppError("Invalid credentials", 401);
         }
 
         const isValidPassword = await comparePassword(password, user.password);
 
         if (!isValidPassword) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid credentials",
-                data: null
-            })
+            return AppError("Invalid credentials", 401);
         }
 
         const token = await generateAccessToken({ id: user._id, role: user.role });
@@ -67,24 +55,17 @@ export const login = async (req, res) => {
         });
     }
     catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Server error",
-            data: null
-        });
+        return AppError("Server error", 500);
+            
     }
-}
+});
 
-export const register = async (req,res) => {
+export const register = asyncHandler(async (req,res) => {
     try {
         const { email, password, role } = req.body;
 
         if (!email || !password || !role) {
-            return res.status(400).json({
-                success: false,
-                message: "Email, password, and role are required",
-                data: null
-            })
+            return AppError("Email, password and role are required", 400);
         }
 
         const hashedPassword = await hashPassword(password);
@@ -100,10 +81,6 @@ export const register = async (req,res) => {
             data: user
         })
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Server error",
-            data: null
-        });
+        return AppError("Server error", 500);
     }
-}
+});

@@ -1,8 +1,7 @@
-
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimiter from './middlewares/rateLimit.middleware.js';
+import rateLimiter from '../middlewares/rateLimit.middleware.js';
 import { protect, login, register } from '../middlewares/auth.middleware.js';
 import { restrictTo } from '../middlewares/role.middleware.js';
 

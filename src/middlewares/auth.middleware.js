@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { hashPassword, comparePassword } from '../../services/auth.service';
+import { hashPassword, comparePassword } from '../../services/auth.service.js';
 import { generateAccessToken } from '../utils/token.js';
-import User from "../models/user/user.model";
+import User from '../models/user/user.model.js'
 
 export const protect = async (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
@@ -13,7 +13,8 @@ export const protect = async (req, res, next) => {
     }
 
     try {
-        req.user = await jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+        const decoded = await jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+        req.user = await User.findById(decoded.id).select('-password');
         next();
     }
     catch (error) {
@@ -76,12 +77,12 @@ export const login = async (req, res) => {
 
 export const register = async (req,res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, role } = req.body;
 
-        if (!email || !password) {
+        if (!email || !password || !role) {
             return res.status(400).json({
                 success: false,
-                message: "Email and password are required",
+                message: "Email, password, and role are required",
                 data: null
             })
         }
@@ -90,7 +91,8 @@ export const register = async (req,res) => {
 
         const user = await User.create({
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            role
         });
         return res.status(201).json({
             success: true,

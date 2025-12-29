@@ -28,10 +28,6 @@ export const login = asyncHandler(async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return next(new AppError("Email and password are required", 400));
-        }
-
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
@@ -64,10 +60,6 @@ export const register = asyncHandler(async (req,res) => {
     try {
         const { email, password, role } = req.body;
 
-        if (!email || !password || !role) {
-            return next(new AppError("Email, password and role are required", 400));
-        }
-
         const hashedPassword = await hashPassword(password);
 
         const user = await User.create({
@@ -75,11 +67,13 @@ export const register = asyncHandler(async (req,res) => {
             password: hashedPassword,
             role
         });
+
         return res.status(201).json({
             success: true,
             message: "User registered successfully",
             data: user
-        })
+        });
+
     } catch (error) {
         return next(new AppError("Server error", 500));
     }

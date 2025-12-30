@@ -6,6 +6,8 @@ import AppError from "../utils/AppError.js";
 import asyncHandler from "../middlewares/asyncHandler.js";
 import refreshTokenModel from '../modules/auth/refreshToken.model.js';
 
+import { auditLogger, errorLogger } from '../utils/logger.js';
+
 
 export const login = asyncHandler(async (req, res) => {
     try {
@@ -33,6 +35,14 @@ export const login = asyncHandler(async (req, res) => {
             expiresAt: new Date(Date.now() + 7*24*60*60*1000) // 7 days
         });
 
+        auditLogger.info('User logged in successfully', {
+            userId: user._id,
+            email: user.email,
+            ip: req.ip,
+            userAgent: req.get('User-Agent'),
+            timestamp: new Date().toISOString()
+        });
+
         return res.status(200).json({
             success: true,
             message: "Login successful",
@@ -43,6 +53,12 @@ export const login = asyncHandler(async (req, res) => {
         });
     }
     catch (error) {
+        auditLogger.warn('Login failed', {
+            error: error.message,
+            ip: req.ip,
+            timestamp: new Date().toISOString()
+        });
+
         return next(new AppError("Server error", 500));
             
     }

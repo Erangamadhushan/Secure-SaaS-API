@@ -11,14 +11,14 @@ import { registerValidation, loginValidation } from '../validations/auth.validat
 import validate from '../middlewares/validate.middleware.js';
 
 const router = express.Router();
+router.use(helmet());
+router.use(cors());
+router.use(rateLimiter);
 
 router.get('/', (req, res) => {
     res.send('Welcome to the Secure SaaS API');
 });
 
-router.use(helmet());
-router.use(cors());
-router.use(rateLimiter);
 
 router.get("/admin", protect, restrictTo("ADMIN"), (req, res) => {
     res.json({

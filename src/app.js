@@ -7,7 +7,7 @@ import protectedRoutes from './routes/protected.routes.js';
 
 const app = express();
 
-app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ limit: "200kb" }));
 app.use(helmet());
 app.use(cors());
 app.use(rateLimit);

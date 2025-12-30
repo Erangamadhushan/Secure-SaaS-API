@@ -90,3 +90,45 @@ export const register = asyncHandler(async (req,res) => {
         return next(new AppError("Server error", 500));
     }
 });
+
+export const logout = asyncHandler(async (req, res, next) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return next(new AppError("Refresh token is required", 400));
+    }
+
+    await refreshTokenModel.findOneAndDelete({ token: refreshToken });
+
+    auditLogger.info('User logged out successfully', {
+        token: refreshToken,
+        refreshTokenUsed: true,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        timestamp: new Date().toISOString()
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Logged out successfully"
+    });
+});
+
+export const logoutAllSessions = asyncHandler(async (req, res, next) => {
+    const userId = req.user._id;
+
+    await refreshTokenModel.deleteMany({ user: userId });
+
+    auditLogger.info('User logged out from all sessions', {
+        userId: userId,
+        allSessions: true,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        timestamp: new Date().toISOString()
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Logged out from all sessions successfully"
+    });
+});

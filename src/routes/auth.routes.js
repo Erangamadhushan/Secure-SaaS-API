@@ -2,8 +2,10 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimiter from '../middlewares/rateLimit.middleware.js';
-import { protect, login, register } from '../middlewares/auth.middleware.js';
+import { protect } from '../middlewares/auth.middleware.js';
+import { login, register } from '../controllers/auth.controller.js';
 import { restrictTo } from '../middlewares/role.middleware.js';
+import { refreshAccessToken } from '../modules/auth/auth.controller.js';
 
 import { registerValidation, loginValidation } from '../validations/auth.validation.js';
 import validate from '../middlewares/validate.middleware.js';
@@ -23,6 +25,7 @@ router.get("/admin", protect, restrictTo("ADMIN"), (req, res) => {
         message: "Admin access granted !"
     })
 });
+router.post("/refresh-token", refreshAccessToken);
 
 router.post("/login", loginValidation, validate, login);
 router.post("/register",registerValidation, validate, register);

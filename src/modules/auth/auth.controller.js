@@ -5,13 +5,15 @@ import AppError from '../../utils/AppError.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.js';
 
 export const refreshAccessToken = asyncHandler(async (req, res, next) => {
-    const { refreshToken: incomingRefreshToken } = req.body;
+    const { refreshToken } = req.body;
 
-    if (!incomingRefreshToken) {
+    if (!refreshToken) {
+        console.log("No refresh token provided");
         return next(new AppError("Refresh token is required", 401));
     }
+    //console.log("Incoming Refresh Token:", refreshToken);
 
-    const storedToken = await RefreshToken.findOne({ token: incomingRefreshToken });
+    const storedToken = await RefreshToken.findOne({ token: refreshToken });
 
     if (!storedToken) {
         return next(new AppError("Invalid refresh token", 401));
@@ -20,7 +22,7 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
     let payload;
 
     try {
-        payload = await jwt.verify(incomingRefreshToken, process.env.JWT_REFRESH_SECRET);
+        payload = await jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     } catch (error) {
         return next(new AppError("Invalid refresh token", 403));
     }
@@ -32,7 +34,7 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
     await RefreshToken.create({
         user: payload.id,
         token: newRefreshToken,
-        expiresAt: new Date(Date.now() + 7*24*60*60**1000)
+        expiresAt: new Date(Date.now() + 7*24*60*60*1000)
     });
 
     const newAccessToken = await generateAccessToken({ id: payload.id });

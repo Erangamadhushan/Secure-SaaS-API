@@ -4,6 +4,8 @@ import asyncHandler from '../../middlewares/asyncHandler.js';
 import AppError from '../../utils/AppError.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.js';
 
+import { appLogger } from '../../utils/logger.js';
+
 export const refreshAccessToken = asyncHandler(async (req, res, next) => {
     const { refreshToken } = req.body;
 
@@ -35,6 +37,12 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
         user: payload.id,
         token: newRefreshToken,
         expiresAt: new Date(Date.now() + 7*24*60*60*1000)
+    });
+
+    appLogger.info('Refresh token rotated', {
+        userId: payload.id,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
     });
 
     const newAccessToken = await generateAccessToken({ id: payload.id });

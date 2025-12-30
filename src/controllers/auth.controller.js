@@ -13,7 +13,7 @@ export const login = asyncHandler(async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ email }).select('+password').lean();
 
         if (!user) {
             return next(new AppError("Invalid credentials", 401));
@@ -75,6 +75,10 @@ export const register = asyncHandler(async (req,res) => {
             password: hashedPassword,
             role
         });
+
+        if (!user) {
+            return next(new AppError("User registration failed", 400));
+        }
 
         return res.status(201).json({
             success: true,

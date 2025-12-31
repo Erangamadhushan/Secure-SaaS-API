@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { hashPassword, comparePassword } from '../../services/auth.service.js';
+import { hashPassword, comparePassword, isAccountLocked } from '../../services/auth.service.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 import User from '../modules/user/user.model.js';
 import AppError from "../utils/AppError.js";
@@ -7,7 +7,8 @@ import asyncHandler from "../middlewares/asyncHandler.js";
 import refreshTokenModel from '../modules/auth/refreshToken.model.js';
 
 import { auditLogger, errorLogger } from '../utils/logger.js';
-
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_TIME = 5 * 60 * 1000; // 5 minutes
 
 export const login = asyncHandler(async (req, res) => {
     try {
@@ -19,9 +20,27 @@ export const login = asyncHandler(async (req, res) => {
             return next(new AppError("Invalid credentials", 401));
         }
 
+        if (isAccountLocked(user)) {
+            return next(
+                new AppError(`Account is locked due to multiple failed login attempts. Please try again later.`, 423)
+            )
+        }
+
         const isValidPassword = await comparePassword(password, user.password);
 
         if (!isValidPassword) {
+            user.loginAttempts = (user.loginAttempts || 0) + 1;
+
+            if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+                user.isLocked = true;
+                user.lockUntil = Date.now() + LOCK_TIME;
+                await User.updateOne({ _id: user._id }, { isLocked: user.isLocked, lockUntil: user.lockUntil, loginAttempts: user.loginAttempts });
+                return next(
+                    new AppError(`Account is locked due to multiple failed login attempts. Please try again later.`, 423)
+                );
+            }
+
+            await User.updateOne({ _id: user._id }, { loginAttempts: user.loginAttempts });
             return next(new AppError("Invalid credentials", 401));
         }
 
@@ -42,6 +61,14 @@ export const login = asyncHandler(async (req, res) => {
             userAgent: req.get('User-Agent'),
             timestamp: new Date().toISOString()
         });
+
+
+        // Reset login attempts on successful login
+        user.loginAttempts = 0;
+        user.isLocked = false;
+        user.lockUntil = null;
+        await User.updateOne({ _id: user._id }, { loginAttempts: 0, isLocked: false, lockUntil: null });
+        
 
         return res.status(200).json({
             success: true,

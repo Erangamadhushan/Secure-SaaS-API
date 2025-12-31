@@ -1,21 +1,35 @@
 import jwt from 'jsonwebtoken';
+import User from '../modules/user/user.model.js';
+import AppError from "../utils/AppError.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
 
-export const protect = (req, res, next) => {
+import { auditLogger } from '../utils/logger.js';
+
+export const protect = asyncHandler(async (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-        return res.status(401).json({
-            message: 'Not authorized, token missing'
-        })
+        auditLogger.warn('Unauthorized access attempt', {
+            ip: req.ip,
+            path: req.originalUrl,
+            attemptedAt: new Date().toISOString()
+        });
+        return next(new AppError("Not authorized, token missing", 401));
     }
 
     try {
-        req.user = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+        const decoded = await jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+        req.user = await User.findById(decoded.id).select('-password');
         next();
     }
     catch (error) {
-        return res.status(401).json({
-            message: 'Not authorized, token invalid'
-        })
+        auditLogger.warn('Invalid token access attempt', {
+            ip: req.ip,
+            path: req.originalUrl,
+            attemptedAt: new Date().toISOString()
+        });
+        return next(new AppError("Not authorized, token missing", 401));
     }
-}
+
+});
+

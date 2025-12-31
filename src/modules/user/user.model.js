@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        select: false,
+        required: true,
+        select: false, // Exclude password from query results by default
     },
     role: {
         type: String,
@@ -20,5 +21,8 @@ const userSchema = new mongoose.Schema({
         default: false
     }
 }, { timestamps: true });
+
+// Create an index on email for faster lookups
+userSchema.index({ email: 1 });
 
 export default mongoose.model('User', userSchema);

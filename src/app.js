@@ -1,5 +1,5 @@
 import express from 'express';
-import helmet from 'helmet';
+import helmet, { contentSecurityPolicy } from 'helmet';
 import cors from 'cors';
 import rateLimit from './middlewares/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
@@ -8,7 +8,20 @@ import protectedRoutes from './routes/protected.routes.js';
 const app = express();
 
 app.use(express.json({ limit: "200kb" }));
-app.use(helmet());
+
+// Helmet helps secure Express apps by setting various HTTP headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+        },
+    },
+    frameguard: { action: 'deny' },
+    referrerPolicy: { policy: "no-referrer" },
+}));
 app.use(cors());
 app.use(rateLimit);
 

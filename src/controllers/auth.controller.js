@@ -44,7 +44,7 @@ export const login = asyncHandler(async (req, res) => {
             return next(new AppError("Invalid credentials", 401));
         }
 
-        const token = await generateAccessToken({ id: user._id, role: user.role });
+        const accessToken = await generateAccessToken({ id: user._id, role: user.role });
 
         const refreshToken = await generateRefreshToken({ id: user._id });
 
@@ -69,15 +69,22 @@ export const login = asyncHandler(async (req, res) => {
         user.lockUntil = null;
         await User.updateOne({ _id: user._id }, { loginAttempts: 0, isLocked: false, lockUntil: null });
         
-
-        return res.status(200).json({
+        res
+        .cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        })
+        .status(200)
+        .json({
             success: true,
             message: "Login successful",
             data: {
-                token,
-                refreshToken
+                accessToken
             }
         });
+        
     }
     catch (error) {
         auditLogger.warn('Login failed', {

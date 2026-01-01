@@ -4,11 +4,12 @@ import cors from 'cors';
 import rateLimit from './middlewares/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import protectedRoutes from './routes/protected.routes.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
 app.use(express.json({ limit: "200kb" }));
-
+app.use(cookieParser()); // To parse cookies from incoming requests
 // Helmet helps secure Express apps by setting various HTTP headers
 app.use(helmet({
     contentSecurityPolicy: {

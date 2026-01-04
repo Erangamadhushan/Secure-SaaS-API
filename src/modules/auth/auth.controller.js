@@ -7,7 +7,9 @@ import { generateAccessToken, generateRefreshToken } from '../../utils/token.js'
 import { appLogger } from '../../utils/logger.js';
 
 export const refreshAccessToken = asyncHandler(async (req, res, next) => {
-    const { refreshToken } = req.body;
+    //const { refreshToken } = req.body;
+
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
         console.log("No refresh token provided");
@@ -47,12 +49,20 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
 
     const newAccessToken = await generateAccessToken({ id: payload.id });
 
-    return res.status(200).json({
-        success: true,
-        data: {
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken
-        }
+    res
+    .cookie('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
+    .status(200)
+    .json({
+        success: true,
+        message: "Access token refreshed",
+        data: {
+            accessToken: newAccessToken
+        }
+    });
 
 });

@@ -10,6 +10,7 @@ import { loginLimiter } from '../middlewares/loginRateLimit.middleware.js';
 
 import { registerValidation, loginValidation } from '../validations/auth.validation.js';
 import validate from '../middlewares/validate.middleware.js';
+import csrfProtection from '../middlewares/csrf.middleware.js';
 
 const router = express.Router();
 router.use(helmet());
@@ -31,7 +32,7 @@ router.post("/refresh-token", refreshAccessToken);
 
 router.post("/login", loginLimiter, loginValidation, validate, login);
 router.post("/register",registerValidation, validate, register);
-router.post("/logout", protect, logout);
-router.post("/logout-all", protect, logoutAllSessions);
+router.post("/logout", csrfProtection, protect, logout);
+router.post("/logout-all", csrfProtection, protect, logoutAllSessions);
 
 export default router;

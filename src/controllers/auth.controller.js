@@ -84,6 +84,8 @@ export const login = asyncHandler(async (req, res) => {
                 accessToken
             }
         });
+
+        return ;
         
     }
     catch (error) {
@@ -142,7 +144,14 @@ export const logout = asyncHandler(async (req, res, next) => {
         timestamp: new Date().toISOString()
     });
 
-    return res.status(200).json({
+    res
+    .clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+    })
+    .status(200)
+    .json({
         success: true,
         message: "Logged out successfully"
     });

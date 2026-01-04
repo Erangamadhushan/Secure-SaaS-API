@@ -5,9 +5,12 @@ import rateLimit from './middlewares/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import protectedRoutes from './routes/protected.routes.js';
 import cookieParser from 'cookie-parser';
+import csrf from "csurf";
 
 const app = express();
-
+const csrfProtection = csrf({
+  cookie: true,
+});
 app.use(express.json({ limit: "200kb" }));
 app.use(cookieParser()); // To parse cookies from incoming requests
 // Helmet helps secure Express apps by setting various HTTP headers

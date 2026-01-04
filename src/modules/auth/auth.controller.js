@@ -7,7 +7,9 @@ import { generateAccessToken, generateRefreshToken } from '../../utils/token.js'
 import { appLogger } from '../../utils/logger.js';
 
 export const refreshAccessToken = asyncHandler(async (req, res, next) => {
-    const { refreshToken } = req.body;
+    //const { refreshToken } = req.body;
+
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
         console.log("No refresh token provided");

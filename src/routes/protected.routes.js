@@ -3,7 +3,7 @@ import { protect } from '../middlewares/auth.middleware.js';
 import csrfRouter from './csrf.routes.js';
 
 const router = express.Router();
-router.use('/csrf-protected', protect, csrfRouter);
+router.use('/csrf-token', protect, csrfRouter);
 
 router.get('/protected', protect, (req, res) => {
     res.json({

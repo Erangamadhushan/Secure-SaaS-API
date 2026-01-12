@@ -1,7 +1,9 @@
 import express from 'express';
 import { protect } from '../middlewares/auth.middleware.js';
+import csrfRouter from './csrf.routes.js';
 
 const router = express.Router();
+router.use('/csrf-token', protect, csrfRouter);
 
 router.get('/protected', protect, (req, res) => {
     res.json({
@@ -16,5 +18,7 @@ router.get('/dashboard', protect, (req, res) => {
         user: req.user
     });
 });
+
+
 
 export default router;
